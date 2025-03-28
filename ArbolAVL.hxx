@@ -256,8 +256,6 @@ NodoBinario<T>* ArbolAVL<T>::eliminarRecursivo(NodoBinario<T>* nodo, T val, bool
         eliminado = false;
         return nullptr;
     }
-
-    // Paso 1: Realizar eliminación normal de BST
     if (val < nodo->obtenerDato()) {
         nodo->fijarHijoIzq(eliminarRecursivo(nodo->obtenerHijoIzq(), val, eliminado));
     } else if (val > nodo->obtenerDato()) {
@@ -267,9 +265,13 @@ NodoBinario<T>* ArbolAVL<T>::eliminarRecursivo(NodoBinario<T>* nodo, T val, bool
         
         if (nodo->obtenerHijoIzq() == nullptr || nodo->obtenerHijoDer() == nullptr) {
             NodoBinario<T>* temp = nodo->obtenerHijoIzq() ? nodo->obtenerHijoIzq() : nodo->obtenerHijoDer();
+            
+            nodo->fijarHijoIzq(nullptr);
+            nodo->fijarHijoDer(nullptr);
+        
             delete nodo;
             return temp;
-        } else {
+        }else {
             NodoBinario<T>* sucesor = nodoMinimo(nodo->obtenerHijoDer());
             nodo->fijarDato(sucesor->obtenerDato());
             nodo->fijarHijoDer(eliminarRecursivo(nodo->obtenerHijoDer(), sucesor->obtenerDato(), eliminado));
