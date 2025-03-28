@@ -18,6 +18,7 @@ public:
     int tamano(NodoBinario<T>* nodo);
     bool insertar(T val);
     bool eliminar(T val);
+    NodoBinario<T>* eliminarRecursivo(NodoBinario<T>* nodo, T val, bool& eliminado);
     bool buscar(T val);
     void preOrden();
     void preOrden(NodoBinario<T>* nodo);
@@ -33,6 +34,7 @@ public:
     NodoBinario<T>* rotacionIzquierdaDerecha(NodoBinario<T>* nodo);
     NodoBinario<T>* rotacionDerechaIzquierda(NodoBinario<T>* nodo);
     NodoBinario<T>* insertarRecursivo(NodoBinario<T>* nodo, T val, bool& insertado);
+    NodoBinario<T>* nodoMinimo(NodoBinario<T>* nodo);
 };
 
 

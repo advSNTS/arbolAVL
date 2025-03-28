@@ -169,77 +169,7 @@ int ArbolAVL<T>::tamano(NodoBinario<T>* nodo) {
     }
     return 1 + tamano(nodo->obtenerHijoIzq()) + tamano(nodo->obtenerHijoDer());
 }
-/*
-template <class T>
-bool ArbolAVL<T>::eliminar(T val) {
-    NodoBinario<T>* nodo = this->raiz;
-    NodoBinario<T>* padre = nullptr;
 
-    // 1. Buscar el nodo a eliminar y su padre
-    while (nodo != nullptr && nodo->obtenerDato() != val) {
-        padre = nodo;
-        if (val < nodo->obtenerDato()) {
-            nodo = nodo->obtenerHijoIzq();
-        } else {
-            nodo = nodo->obtenerHijoDer();
-        }
-    }
-
-    if (nodo == nullptr) {
-        return false;  // No se encontró el valor
-    }
-
-    // Caso 1: El nodo es una hoja
-    if (nodo->esHoja()) {
-        if (padre == nullptr) {
-            this->raiz = nullptr;
-        } else if (padre->obtenerHijoIzq() == nodo) {
-            padre->fijarHijoIzq(nullptr);
-        } else {
-            padre->fijarHijoDer(nullptr);
-        }
-        delete nodo;
-    }
-    // Caso 2: Nodo con un solo hijo
-    else if (nodo->obtenerHijoIzq() == nullptr || nodo->obtenerHijoDer() == nullptr) {
-        NodoBinario<T>* hijo = (nodo->obtenerHijoIzq() != nullptr) ? nodo->obtenerHijoIzq() : nodo->obtenerHijoDer();
-
-        if (padre == nullptr) {
-            this->raiz = hijo;  // Si eliminamos la raíz, el hijo se convierte en la nueva raíz
-        } else if (padre->obtenerHijoIzq() == nodo) {
-            padre->fijarHijoIzq(hijo);
-        } else {
-            padre->fijarHijoDer(hijo);
-        }
-        delete nodo;
-    }
-    // Caso 3: Nodo con dos hijos
-    else {
-        NodoBinario<T>* sucesor = nodo->obtenerHijoDer();
-        NodoBinario<T>* padreSucesor = nodo;
-
-        // Buscar el nodo más pequeño en el subárbol derecho (sucesor inorden)
-        while (sucesor->obtenerHijoIzq() != nullptr) {
-            padreSucesor = sucesor;
-            sucesor = sucesor->obtenerHijoIzq();
-        }
-
-        // Reemplazar el valor del nodo a eliminar con el del sucesor
-        nodo->fijarDato(sucesor->obtenerDato());
-
-        // Ajustar punteros para eliminar el sucesor
-        if (padreSucesor->obtenerHijoIzq() == sucesor) {
-            padreSucesor->fijarHijoIzq(sucesor->obtenerHijoDer());
-        } else {
-            padreSucesor->fijarHijoDer(sucesor->obtenerHijoDer());
-        }
-
-        delete sucesor;
-    }
-
-    return true;
-}
-*/
 template <class T>
 void ArbolAVL<T>::preOrden() {
     preOrden(this->raiz);
@@ -310,4 +240,70 @@ template <class T>
 NodoBinario<T>* ArbolAVL<T>::rotacionDerechaIzquierda(NodoBinario<T>* nodo) {
     nodo->fijarHijoDer(rotacionDerecha(nodo->obtenerHijoDer()));
     return rotacionIzquierda(nodo);
+}
+
+
+template <class T>
+bool ArbolAVL<T>::eliminar(T val) {
+    bool eliminado = false;
+    this->raiz = eliminarRecursivo(this->raiz, val, eliminado);
+    return eliminado;
+}
+
+template <class T>
+NodoBinario<T>* ArbolAVL<T>::eliminarRecursivo(NodoBinario<T>* nodo, T val, bool& eliminado) {
+    if (nodo == nullptr) {
+        eliminado = false;
+        return nullptr;
+    }
+
+    // Paso 1: Realizar eliminación normal de BST
+    if (val < nodo->obtenerDato()) {
+        nodo->fijarHijoIzq(eliminarRecursivo(nodo->obtenerHijoIzq(), val, eliminado));
+    } else if (val > nodo->obtenerDato()) {
+        nodo->fijarHijoDer(eliminarRecursivo(nodo->obtenerHijoDer(), val, eliminado));
+    } else {
+        eliminado = true;
+        
+        if (nodo->obtenerHijoIzq() == nullptr || nodo->obtenerHijoDer() == nullptr) {
+            NodoBinario<T>* temp = nodo->obtenerHijoIzq() ? nodo->obtenerHijoIzq() : nodo->obtenerHijoDer();
+            delete nodo;
+            return temp;
+        } else {
+            NodoBinario<T>* sucesor = nodoMinimo(nodo->obtenerHijoDer());
+            nodo->fijarDato(sucesor->obtenerDato());
+            nodo->fijarHijoDer(eliminarRecursivo(nodo->obtenerHijoDer(), sucesor->obtenerDato(), eliminado));
+        }
+    }
+
+    nodo->fijarAltura(std::max(altura(nodo->obtenerHijoIzq()), altura(nodo->obtenerHijoDer())) + 1);
+
+    int balance = altura(nodo->obtenerHijoIzq()) - altura(nodo->obtenerHijoDer());
+
+    if (balance > 1 && altura(nodo->obtenerHijoIzq()->obtenerHijoIzq()) >= altura(nodo->obtenerHijoIzq()->obtenerHijoDer())) {
+        return rotacionDerecha(nodo);
+    }
+
+    if (balance > 1 && altura(nodo->obtenerHijoIzq()->obtenerHijoIzq()) < altura(nodo->obtenerHijoIzq()->obtenerHijoDer())) {
+        return rotacionIzquierdaDerecha(nodo);
+    }
+
+    if (balance < -1 && altura(nodo->obtenerHijoDer()->obtenerHijoDer()) >= altura(nodo->obtenerHijoDer()->obtenerHijoIzq())) {
+        return rotacionIzquierda(nodo);
+    }
+    if (balance < -1 && altura(nodo->obtenerHijoDer()->obtenerHijoDer()) < altura(nodo->obtenerHijoDer()->obtenerHijoIzq())) {
+        return rotacionDerechaIzquierda(nodo);
+    }
+
+    return nodo;
+}
+
+// Función auxiliar para encontrar el nodo con el valor mínimo
+template <class T>
+NodoBinario<T>* ArbolAVL<T>::nodoMinimo(NodoBinario<T>* nodo) {
+    NodoBinario<T>* actual = nodo;
+    while (actual->obtenerHijoIzq() != nullptr) {
+        actual = actual->obtenerHijoIzq();
+    }
+    return actual;
 }
